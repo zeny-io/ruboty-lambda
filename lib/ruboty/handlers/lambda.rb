@@ -24,11 +24,39 @@ module Ruboty::Handlers
       resp = aws_lambda.invoke({
         function_name: fn,
         invocation_type: "RequestResponse",
+        log_type: "Tail",
         payload: json,
         qualifier: "$LATEST",
       })
 
-      message.reply(resp.log_result, code: true)
+      result = Base64.decode64(resp.log_result)
+      log = []
+      attachments = []
+
+      result.each_line do |line|
+        case true
+        when line.start_with?('START', 'END')
+          next
+        when line.start_with?('REPORT')
+          line[7..-1].strip.split("\t").map {|f| f.split(':', 2).map(&:strip) }.each do |f|
+            attachments << {
+              title: f[0],
+              text: f[1],
+              short: true
+            }
+          end
+        else
+          field = line.split("\t")
+          log << "#{field[0]} #{field[2]}"
+        end
+      end
+
+      payload = resp.payload.read
+      attachments << {
+        title: "payload",
+        text: payload
+      }
+      message.reply(log.join("\n"), code: true, attachments: attachments)
     end
 
     private
