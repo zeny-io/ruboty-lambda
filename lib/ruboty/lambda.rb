@@ -1,7 +1,3 @@
+require "ruboty"
 require "ruboty/lambda/version"
-
-module Ruboty
-  module Lambda
-    # Your code goes here...
-  end
-end
+require "ruboty/handlers/lambda"
