@@ -23,7 +23,7 @@ module Ruboty::Handlers
 
       resp = aws_lambda.invoke({
         function_name: fn,
-        invocation_type: "Event",
+        invocation_type: "RequestResponse",
         payload: json,
         qualifier: "$LATEST",
       })
