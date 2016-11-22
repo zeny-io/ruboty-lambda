@@ -30,8 +30,8 @@ module Ruboty::Handlers
       })
 
       result = Base64.decode64(resp.log_result)
-      log = []
-      attachments = []
+      logs = []
+      fields = []
 
       result.each_line do |line|
         case true
@@ -39,24 +39,30 @@ module Ruboty::Handlers
           next
         when line.start_with?('REPORT')
           line[7..-1].strip.split("\t").map {|f| f.split(':', 2).map(&:strip) }.each do |f|
-            attachments << {
+            fields << {
               title: f[0],
-              text: f[1],
+              value: f[1],
               short: true
             }
           end
         else
-          field = line.split("\t")
-          log << "#{field[0]} #{field[2]}"
+          field = line.strip.split("\t")
+          logs << "#{field[0]} #{field[2]}"
         end
       end
 
       payload = resp.payload.read
-      attachments << {
-        title: "payload",
-        text: payload
+      fields << {
+        title: "Payload",
+        value: payload
       }
-      message.reply(log.join("\n"), code: true, attachments: attachments)
+
+      success = resp.status_code >= 200 && resp.status_code <= 299
+
+      message.reply(logs.join("\n"), code: true, attachments: [{
+        color: success ? 'good' : 'danger',
+        fields: fields
+      }])
     end
 
     private
